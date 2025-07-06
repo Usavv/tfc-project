@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tfc-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tfc-app
+  template:
+    metadata:
+      labels:
+        app: tfc-app
+    spec:
+      containers:
+      - name: app
+        image: uzi00/tfc-app:latest
+        ports:
+        - containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10

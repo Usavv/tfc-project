@@ -1,0 +1,37 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Build') {
+            steps {
+                script {
+                    docker.build("uzi00/tfc-app:${env.BUILD_ID}")
+                }
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'echo "Running tests..."'
+                // Exemple de test: sh 'python -m unittest discover'
+            }
+        }
+        stage('Push') {
+            steps {
+                script {
+                    docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-creds') {
+                        docker.image("uzi00/tfc-app:${env.BUILD_ID}").push()
+                    }
+                }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                // Mettre à jour l'image dans le deployment.yaml
+                sh "sed -i 's|uzi00/tfc-app:latest|uzi00/tfc-app:${env.BUILD_ID}|g' k8s/deployment.yaml"
+                
+                // Appliquer la configuration Kubernetes
+                sh "kubectl apply -f k8s/"
+            }
+        }
+    }
+}
