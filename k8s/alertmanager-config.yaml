@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: alertmanager-prometheus-kube-prometheus-alertmanager
+  namespace: monitoring
+type: Opaque
+stringData:
+  alertmanager.yaml: |
+    global:
+      resolve_timeout: 5m
+    route:
+      group_by: ['alertname']
+      group_wait: 10s
+      group_interval: 5m
+      repeat_interval: 3h
+      receiver: 'argo-webhook'
+      routes:
+      - match:
+          alertname: CrashLoopDetected
+        receiver: argo-webhook
+    receivers:
+    - name: argo-webhook
+      webhook_configs:
+      - url: 'http://argo-workflows-argo-workflows-server.argo.svc.cluster.local:2746/api/v1/events/monitoring/'
+        send_resolved: true
+
+
+
+
+
+

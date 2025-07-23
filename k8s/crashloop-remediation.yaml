@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: crashloop-recovery
+  namespace: argo
+spec:
+  entrypoint: main
+  arguments:
+    parameters:
+      - name: pod
+      - name: namespace
+  templates:
+    - name: main
+      steps:
+        - - name: fetch-logs
+            template: get-pod-logs
+        - - name: rollback-deployment
+            template: rollback-deployment
+
+    - name: get-pod-logs
+      inputs:
+        parameters:
+          - name: pod
+          - name: namespace
+      container:
+        image: bitnami/kubectl
+        command: [sh, -c]
+        args: ["kubectl logs {{inputs.parameters.pod}} -n {{inputs.parameters.namespace}} --previous > /tmp/crashlog.log && cat /tmp/crashlog.log"]
+        
+    - name: rollback-deployment
+      inputs:
+        parameters:
+          - name: pod
+      container:
+        image: bitnami/kubectl
+        command: [kubectl, rollout, undo, deployment/{{inputs.parameters.pod}}]

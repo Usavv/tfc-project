@@ -28,10 +28,11 @@ pipeline {
             steps {
                 // Mettre à jour l'image dans le deployment.yaml
                 sh "sed -i 's|uzi00/tfc-app:latest|uzi00/tfc-app:${env.BUILD_ID}|g' k8s/deployment.yaml"
-                
+
                 // Appliquer la configuration Kubernetes
                 sh "kubectl apply -f k8s/"
             }
         }
     }
 }
+
