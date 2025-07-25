@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: crashloop-alert
+  namespace: monitoring
+spec:
+  groups:
+  - name: k8s-crashloop
+    rules:
+    - alert: PodCrashLooping
+      expr: kube_pod_container_status_waiting_reason{reason="CrashLoopBackOff"} == 1
+      for: 1m
+      labels:
+        severity: critical
+        autoheal: "true"
+      annotations:
+        summary: "Pod {{ $labels.pod }} en CrashLoopBackOff"
+        description: "Le pod {{ $labels.pod }} dans le namespace {{ $labels.namespace }} est en état CrashLoopBackOff depuis plus de 1 minute."
+        runbook: "https://github.com/kubernetes-monitoring/kubernetes-mixin/blob/master/runbook.md#alert-name-podcrashlooping"

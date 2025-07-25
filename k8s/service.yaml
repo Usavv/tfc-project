@@ -3,9 +3,11 @@ kind: Service
 metadata:
   name: tfc-service
 spec:
+  type: NodePort
   selector:
     app: tfc-app
   ports:
     - protocol: TCP
       port: 80
       targetPort: 8080
+      nodePort: 30080

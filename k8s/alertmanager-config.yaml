@@ -1,31 +1,32 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: alertmanager-prometheus-kube-prometheus-alertmanager
+  name: alertmanager-main
   namespace: monitoring
 type: Opaque
 stringData:
   alertmanager.yaml: |
     global:
       resolve_timeout: 5m
+      smtp_from: blackvins9@gmail.com
+      smtp_smarthost: smtp.gmail.com:587
+      smtp_auth_username: blackvins9@gmail.com
+      smtp_auth_password: oiissqzssxlxqibk  # Utilisez un mot de passe d'application
+      smtp_require_tls: true
+
     route:
       group_by: ['alertname']
       group_wait: 10s
       group_interval: 5m
       repeat_interval: 3h
-      receiver: 'argo-webhook'
-      routes:
-      - match:
-          alertname: CrashLoopDetected
-        receiver: argo-webhook
+      receiver: 'gmail-notifications'
+
     receivers:
-    - name: argo-webhook
-      webhook_configs:
-      - url: 'http://argo-workflows-argo-workflows-server.argo.svc.cluster.local:2746/api/v1/events/monitoring/'
-        send_resolved: true
+    - name: 'gmail-notifications'
+      email_configs:
+      - to: blackvins9@gmail.com
+        send_resolved: true  # Notification quand l'alerte est résolue
+        html: '{{ template "email.default.html" . }}'
 
-
-
-
-
-
+    templates:
+    - '/etc/alertmanager/template/*.tmpl'

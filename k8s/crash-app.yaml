@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crash-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: crash-app
+  template:
+    metadata:
+      labels:
+        app: crash-app
+        autoheal: "true"  # Important pour l'auto-réparation
+    spec:
+      containers:
+      - name: crash-container
+        image: busybox
+        args:
+        - /bin/sh
+        - -c
+        - 'echo "Crashing..."; sleep 10; exit 1'  # Crash intentionnel
