@@ -1,0 +1,49 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: tfc-alerts
+  namespace: monitoring
+spec:
+  groups:
+  - name: tfc-rules
+    rules:
+    # Alerte pour CrashLoopBackOff
+    - alert: PodCrashLooping
+      expr: kube_pod_container_status_waiting_reason{reason="CrashLoopBackOff"} == 1
+      for: 1m
+      labels:
+        severity: critical
+        app: autoheal
+      annotations:
+        summary: "Pod en CrashLoopBackOff ({{ $labels.namespace }}/{{ $labels.pod }})"
+        description: "Le pod {{ $labels.pod }} dans le namespace {{ $labels.namespace }} est en CrashLoopBackOff depuis au moins 1 minute."
+    
+    # Alerte pour Node Not Ready
+    - alert: NodeNotReady
+      expr: kube_node_status_condition{condition="Ready", status="false"} == 1
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Node {{ $labels.node }} is Not Ready"
+        description: "Le nœud {{ $labels.node }} est dans l'état Not Ready depuis plus de 5 minutes."
+    
+    # Alerte de résolution pour CrashLoopBackOff
+    - alert: PodCrashLoopingResolved
+      expr: kube_pod_container_status_waiting_reason{reason="CrashLoopBackOff"} == 0
+      for: 1m
+      labels:
+        severity: info
+      annotations:
+        summary: "CrashLoopBackOff résolu ({{ $labels.namespace }}/{{ $labels.pod }})"
+        description: "Le pod {{ $labels.pod }} n'est plus en état CrashLoopBackOff."
+    
+    # Alerte de résolution pour Node Not Ready
+    - alert: NodeNotReadyResolved
+      expr: kube_node_status_condition{condition="Ready", status="true"} == 1
+      for: 1m
+      labels:
+        severity: info
+      annotations:
+        summary: "Node {{ $labels.node }} is Ready"
+        description: "Le nœud {{ $labels.node }} est de nouveau opérationnel."
