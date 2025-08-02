@@ -1,37 +1,32 @@
 node {
     def app
+    def dockerHubCredentials = 'dockerhub-credentials'
 
     stage('Clone repository') {
-
-
         checkout scm
     }
 
     stage('Build image') {
-
-       app = docker.build("uzi00/tfc-app")
+        app = docker.build("uzi00/tfc-app")
     }
 
     stage('Test image') {
-
-
         app.inside {
             sh 'echo "Tests passed"'
         }
     }
 
     stage('Push image') {
-
-        docker.withRegistry('https://registry.hub.docker.com', 'dockerhub') {
+        docker.withRegistry('https://registry.hub.docker.com', dockerHubCredentials) {
             app.push("${env.BUILD_NUMBER}")
+            app.push("latest")
         }
     }
 
     stage('Trigger ManifestUpdate') {
-                echo "triggering updatemanifestjob"
-                build job: 'updatemanifest', parameters: [string(name: 'DOCKERTAG', value: env.BUILD_NUMBER)]
-        }
+        echo "triggering updatemanifestjob"
+        build job: 'updatemanifest', parameters: [
+            string(name: 'DOCKERTAG', value: env.BUILD_NUMBER)
+        ]
+    }
 }
-
-
-
